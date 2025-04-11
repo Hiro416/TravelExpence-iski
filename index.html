@@ -1,3 +1,6 @@
+// 再構築版 交通費精算Webアプリ
+// 最新の指示をすべて反映したHTML & JavaScript構成
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -69,13 +72,11 @@ pre {
 <label>軽油単価(円/L): <input type="number" id="dieselPrice" required></label>
 <label>ハイオク単価(円/L): <input type="number" id="premiumPrice" required></label>
 
-<h3>ドライバー選択（チェックで追加）</h3>
+<h3>ドライバー（チェックで選択 & その場で油種選択）</h3>
 <div id="driversArea"></div>
-<div id="fuelTypesArea"></div>
 
-<h3>同乗者選択（チェックで追加）</h3>
+<h3>同乗者（チェックで選択）</h3>
 <div id="passengersArea"></div>
-<div id="selectedPassengers"></div>
 
 <label>1年生人数: <input type="number" id="firstYears" required></label>
 <button type="button" onclick="calculateCost()">計算</button>
@@ -84,49 +85,74 @@ pre {
 <pre id="result"></pre>
 
 <script>
-const members = ['知宏', 'ひろと', '悠莉', 'まゆか', '昭博', 'りょうすけ', 'まなか', 'ゆかこ', 'あやの', '笙太郎', 'ともや', 'まいこ', 'よう', '赤津', 'ざくれい', 'ガッキー', 'ひとみ', 'はやた', 'ジェミン', 'たくや', 'あきひろ', 'はるな', 'しんご', 'おぎの', 'しゆう', 'ごう', '和音', 'みきひこ', '愛佳', '葉山', 'シエイ', 'まゆこ', 'かまやち', 'こばしん', 'ゆうた', 'みのり', '馬場', 'たけし', 'だいや（６年）', 'なつめ', 'もっつぁん', 'かいさん'];
-const driverCandidates = ['知宏', 'ひろと', '昭博', 'りょうすけ', 'あやの', '笙太郎', 'ともや', 'よう', '赤津', 'ざくれい', 'しんご', 'しゆう', 'ごう', '和音', 'みきひこ', '葉山', 'こばしん', 'たけし'];
+const members = ['知宏', 'ひろと', '悠莉', 'まゆか', '昭博', 'りょうすけ', 'まなか', 'ゆかこ', 'あやの', '笙太郎', 'ともや', 'まいこ', 'よう', '赤津', 'ざくれい', 'ガッキー', 'ひとみ', 'はやた', 'ジェミン', 'たくや', 'あきひろ', 'はるな', 'しんご', 'おぎの', 'しゆう', 'ごう', '和音', 'みきひこ', '愛佳', '葉山', 'シエイ', 'まゆこ', 'かまやち', 'こばしん', 'ゆうた', 'みのり', '馬場', 'たけし', 'だいや（６年）', 'なつめ', 'もっつぁん', 'かいさん']; // 省略（最新メンバーリストを入れる）
+const driverCandidates = ['知宏', 'ひろと', '昭博', 'りょうすけ', 'あやの', '笙太郎', 'ともや', 'よう', '赤津', 'ざくれい', 'しんご', 'しゆう', 'ごう', '和音', 'みきひこ', '葉山', 'こばしん', 'たけし']; // 省略（最新ドライバー候補を入れる）
 const fuelTypes = ['ガソリン', '軽油', 'ハイオク'];
 
 const driversArea = document.getElementById('driversArea');
-const fuelTypesArea = document.getElementById('fuelTypesArea');
 const passengersArea = document.getElementById('passengersArea');
-const selectedPassengers = document.getElementById('selectedPassengers');
 
-// driver checkboxes
- driverCandidates.forEach(name => {
-  driversArea.innerHTML += `<label><input type="checkbox" value="${name}" onchange="toggleDriver(this)">${name}</label><br>`;
+// ドライバー選択生成
+driverCandidates.forEach(name => {
+  driversArea.innerHTML += `<label><input type='checkbox' value='${name}' onchange='toggleDriver(this)'>${name}</label><br>`;
 });
 
-// passenger checkboxes
+// 同乗者選択生成
 members.forEach(name => {
-  passengersArea.innerHTML += `<label><input type="checkbox" value="${name}" onchange="togglePassenger(this)">${name}</label><br>`;
+  passengersArea.innerHTML += `<label><input type='checkbox' value='${name}' onchange='togglePassenger(this)'>${name}</label><br>`;
 });
 
 function toggleDriver(checkbox) {
   const name = checkbox.value;
   const id = `fuelType_${name}`;
   if (checkbox.checked) {
-    const wrapper = document.createElement('div');
-    wrapper.id = id;
-    wrapper.innerHTML = `<strong>${name}</strong>: <select>${fuelTypes.map(f => `<option value='${f}'>${f}</option>`).join('')}</select>`;
-    fuelTypesArea.appendChild(wrapper);
+    const fuelSelect = document.createElement('select');
+    fuelSelect.id = id;
+    fuelTypes.forEach(f => fuelSelect.innerHTML += `<option value='${f}'>${f}</option>`);
+    checkbox.parentElement.appendChild(fuelSelect);
   } else {
     document.getElementById(id).remove();
   }
 }
 
 function togglePassenger(checkbox) {
-  const name = checkbox.value;
-  const id = `passenger_${name}`;
-  if (checkbox.checked) {
-    const wrapper = document.createElement('div');
-    wrapper.id = id;
-    wrapper.textContent = name;
-    selectedPassengers.appendChild(wrapper);
-  } else {
-    document.getElementById(id).remove();
-  }
+  // 見た目はチェックのみ
+}
+
+function calculateCost() {
+  const distance = Number(document.getElementById('distance').value);
+  const highwayFee = Number(document.getElementById('highwayFee').value);
+  const gasolinePrice = Number(document.getElementById('gasolinePrice').value);
+  const dieselPrice = Number(document.getElementById('dieselPrice').value);
+  const premiumPrice = Number(document.getElementById('premiumPrice').value);
+  const firstYears = Number(document.getElementById('firstYears').value);
+
+  const fuelPriceMap = { 'ガソリン': gasolinePrice, '軽油': dieselPrice, 'ハイオク': premiumPrice };
+
+  const drivers = Array.from(document.querySelectorAll('#driversArea input[type=checkbox]:checked')).map(c => c.value);
+  const passengers = Array.from(document.querySelectorAll('#passengersArea input[type=checkbox]:checked')).map(c => c.value);
+
+  let fuelCost = 0;
+  drivers.forEach(name => {
+    const fuelType = document.getElementById(`fuelType_${name}`).value;
+    fuelCost += (distance / 8) * fuelPriceMap[fuelType];
+  });
+
+  const totalCost = fuelCost + highwayFee;
+  const totalPoints = drivers.length + (passengers.length * 2) + (firstYears * 2);
+  const costPerPoint = totalCost / totalPoints;
+
+  let resultText = `総交通費: ${totalCost.toFixed(0)}円\n1ポイントあたり: ${costPerPoint.toFixed(0)}円\n`;
+
+  drivers.forEach(name => {
+    resultText += `${name} (ドライバー): ${(costPerPoint * 1).toFixed(0)}円\n`;
+  });
+  passengers.forEach(name => {
+    resultText += `${name} (同乗者): ${(costPerPoint * 2).toFixed(0)}円\n`;
+  });
+  resultText += `1年生合計交通費: ${(firstYears * 2 * costPerPoint).toFixed(0)}円`;
+
+  document.getElementById('result').textContent = resultText;
 }
 </script>
 
